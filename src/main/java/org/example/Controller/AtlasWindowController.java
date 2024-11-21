@@ -29,6 +29,7 @@ public class AtlasWindowController {
         bindButtonEvents();
         driveDetector = new DriveDetector();
         volumes = driveDetector.getVolumes();
+        showExistingGoogleDrive();
         atlasWindow.expandFolder(volumes);
     }
 
@@ -36,6 +37,26 @@ public class AtlasWindowController {
         try{
             driveConnection = new GoogleDriveConnection();
             driveConnection.clearTokens();
+            driveConnection.login();
+            if (driveConnection.isLoggedIn())
+                atlasWindow.showMessage("Welcome " + driveConnection.getLoggedInUserName() + "!");
+            else {
+                atlasWindow.showMessage("Login failed!");
+                return;
+            }
+            GoogleFileNode root = driveConnection.getRootDirectory();
+            FileNode googleDriveNode = driveConnection.convertToFileNode(root);
+            volumes.add(googleDriveNode);
+            atlasWindow.expandFolder(volumes);
+        } catch (GeneralSecurityException | IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void showExistingGoogleDrive(){
+        try{
+            driveConnection = new GoogleDriveConnection();
+//            driveConnection.clearTokens();
             driveConnection.login();
             if (driveConnection.isLoggedIn())
                 atlasWindow.showMessage("Welcome " + driveConnection.getLoggedInUserName() + "!");
@@ -142,13 +163,27 @@ public class AtlasWindowController {
         }
     }
 
+    public String getGoogleDrivePath(FileNode fileNode){
+        try {
+            return fileNode.getGoogleFileNode().getReadablePath(driveConnection.getService());
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     public void onRowDoubleClicked(FileNode selectedFileNode) {
         try {
             if (selectedFileNode.isFile() && selectedFileNode.getGoogleDriveFileID() != null) {
                 driveConnection.getFileFromDrive(selectedFileNode.getGoogleDriveFileID());
                 GoogleDriveFileHandler gDFileHandler = new GoogleDriveFileHandler(driveConnection.getService());
                 gDFileHandler.downloadOpenAndDeleteFileInBackground(selectedFileNode.getGoogleDriveFileID(), selectedFileNode.getName());
-            } else if (!selectedFileNode.isFile()) {
+            }else if (!selectedFileNode.isFile() && selectedFileNode.getGoogleDriveFileID() != null) {
+                navigationHistory.visitDirectory(getGoogleDrivePath(selectedFileNode));
+                currentDirectory = getGoogleDrivePath(selectedFileNode);
+                atlasWindow.expandFolder(selectedFileNode.getChildren());
+                showWorkingDirectory();
+            }else if (!selectedFileNode.isFile()) {
                 navigationHistory.visitDirectory(currentDirectory);
                 currentDirectory = selectedFileNode.getAbsolutePath();
                 atlasWindow.expandFolder(selectedFileNode.getChildren());

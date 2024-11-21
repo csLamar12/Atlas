@@ -58,6 +58,10 @@ public class FileNode {
         return GoogleDriveFileID;
     }
 
+    public GoogleFileNode getGoogleFileNode() {
+        return googleFileNode;
+    }
+
     public boolean isGoogleFileNode(){
         return googleFileNode != null;
     }

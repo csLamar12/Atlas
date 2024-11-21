@@ -1,8 +1,11 @@
 package org.example.Model;
 
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -234,4 +237,37 @@ public class GoogleFileNode {
         put("application/vnd.google-apps.script", "Google Apps Script");
         put("application/vnd.google-apps.site", "Google Sites Document");
     }};
+
+    public String getReadablePath(Drive driveService) throws IOException {
+        List<String> pathSegments = new ArrayList<>();
+        GoogleFileNode currentNode = this;
+
+        // Traverse up to the root
+        while (currentNode != null) {
+            pathSegments.add(0, currentNode.getName()); // Add the name to the front of the list
+            currentNode = getParentNode(driveService, currentNode);
+        }
+
+        System.out.println(String.join("/", pathSegments));
+        // Join the segments with a file separator (e.g., "/")
+        return String.join("/", pathSegments);
+    }
+
+    private GoogleFileNode getParentNode(Drive driveService, GoogleFileNode node) throws IOException {
+        String parentId = getParentId(node.getFile());
+        if (parentId == null) return null; // Reached root
+
+        // Fetch the parent File object from Drive
+        File parentFile = driveService.files().get(parentId)
+                .setFields("id, name, mimeType, parents, size, modifiedTime")
+                .execute();
+
+        return new GoogleFileNode(parentFile);
+    }
+
+    private String getParentId(File file) {
+        // Get the parent ID from the File object
+        return (file.getParents() != null && !file.getParents().isEmpty()) ? file.getParents().get(0) : null;
+    }
+
 }

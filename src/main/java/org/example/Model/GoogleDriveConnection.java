@@ -20,9 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class GoogleDriveConnection {
     private static final String APPLICATION_NAME = "Google Drive Java App";
@@ -34,6 +32,7 @@ public class GoogleDriveConnection {
     private static final String CREDENTIALS_FILE_PATH = "src/main/java/org/example/Resources/credentials.json";
 
     private Drive service;
+
 
     // Handles the authentication process and initializes the Drive service
     public void login() throws GeneralSecurityException, IOException {

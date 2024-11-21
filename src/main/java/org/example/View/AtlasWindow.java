@@ -144,6 +144,16 @@ public class AtlasWindow extends JFrame {
         fileTable.setShowGrid(false);
         //ToDo remove header background and add line
 
+//        // Create a custom renderer for left alignment
+//        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
+//        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+//
+//        // Apply the renderer to all columns
+//        for (int i = 0; i < fileTable.getColumnCount(); i++) {
+//            TableColumn column = fileTable.getColumnModel().getColumn(i);
+//            column.setCellRenderer(leftRenderer);
+//        }
+
         // Adjust icon column
         TableColumn iconColumn = fileTable.getColumnModel().getColumn(0);
         iconColumn.setPreferredWidth(30);  // Set the column width to fit the icon

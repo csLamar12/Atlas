@@ -31,7 +31,6 @@ public class FileSignatureReader {
         fileSignatures.put(new byte[]{0, 0, 0, 24, 102, 116, 121, 112}, "MP4");
         fileSignatures.put(new byte[]{0, 0, 0, 20, 102, 116, 121, 112}, "MOV");
         fileSignatures.put(new byte[]{26, 69, -33, -93}, "MKV");
-
         fileSignatures.put(new byte[]{82, 73, 70, 70}, "AVI");
         fileSignatures.put(new byte[]{70, 76, 86, 1}, "FLV");
 
