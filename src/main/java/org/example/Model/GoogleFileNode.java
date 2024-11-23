@@ -1,12 +1,10 @@
 package org.example.Model;
 
 import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -16,8 +14,6 @@ public class GoogleFileNode {
     private long size;
     private SimpleDateFormat dateFormat;
     private boolean isFile;
-    private Map<String, Object> metadata = new HashMap<>();
-    private List<FileNode> children = new ArrayList<>();
     private File file;
     private GoogleDriveConnection driveConnection;
     private Drive drive;
@@ -47,20 +43,11 @@ public class GoogleFileNode {
             }
         }
         try {
-            
+
             this.driveConnection.AddFileToMap(this.file.getId(), this.getReadablePath(drive));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-    }
-
-    // TODO - Add Summary
-    public void setMetadata() {
-        this.metadata.put("Name", this.name);
-        this.metadata.put("Type", this.type);
-        this.metadata.put("Size", this.convertSize());
-        this.metadata.put("LastModified", this.lastModified);
     }
 
     public String convertSize() {
@@ -116,11 +103,6 @@ public class GoogleFileNode {
     public long getSize() {
         return size;
     }
-
-    public SimpleDateFormat getDateFormat() {
-        return dateFormat;
-    }
-
 
     public void setFile(boolean file) {
         isFile = file;
@@ -249,21 +231,5 @@ public class GoogleFileNode {
         // Assuming a file can have multiple parents (like shared drives, etc.), return the first parent
         String parentId = file.getParents().get(0);
         return parentId;
-    }
-
-    public GoogleDriveConnection getDriveConnection() {
-        return driveConnection;
-    }
-
-    public void setDriveConnection(GoogleDriveConnection driveConnection) {
-        this.driveConnection = driveConnection;
-    }
-
-    public Drive getDrive() {
-        return drive;
-    }
-
-    public void setDrive(Drive drive) {
-        this.drive = drive;
     }
 }

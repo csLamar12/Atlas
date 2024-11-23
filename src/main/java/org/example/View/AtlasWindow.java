@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +29,10 @@ public class AtlasWindow extends JFrame {
     private JButton backBtn, forwardBtn;
     private JScrollPane scrollPane;
     private JSplitPane splitPane;
-    private String workingDirectory;
     private JLabel currentDirectory, addAccountbtn;
-    VideoBasedPreview videoVideoBasedPreview;
+//    private JTextField searchBar;
+//    private JPopupMenu popupMenu;
+    private VideoBasedPreview videoVideoBasedPreview;
 
     public AtlasWindow() {
         setTitle("Atlas");
@@ -69,6 +71,26 @@ public class AtlasWindow extends JFrame {
         addAccountbtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         addAccountbtn.setForeground(Color.BLUE);
 
+//        searchBar = new JTextField("Search\t\t\t               🔍");
+//        searchBar.setFont(new Font("Tahoma", Font.PLAIN, 12));
+//        searchBar.setPreferredSize(new Dimension(300, 20));
+//        searchBar.setCursor(new Cursor(Cursor.TEXT_CURSOR));
+//        searchBar.setForeground(Color.GRAY);
+//        searchBar.setBackground(Color.WHITE);
+//
+//        popupMenu = new JPopupMenu();
+//        ArrayList<String> allSuggestions = new ArrayList<>();
+//        allSuggestions.add("apple");
+//        allSuggestions.add("banana");
+//        allSuggestions.add("grape");
+//        allSuggestions.add("orange");
+//
+//        for (String s : allSuggestions) {
+//            popupMenu.add(new JMenuItem(s));
+//        }
+//        popupMenu.setPopupSize(new Dimension(295, 200));
+//        popupMenu.setVisible(false);
+
 
         c.insets = new Insets(5, 5, 5, 0);
         c.anchor = GridBagConstraints.LINE_START;
@@ -78,12 +100,14 @@ public class AtlasWindow extends JFrame {
         headerPanel.add(backBtn, c);
         c.gridx = 1;
         headerPanel.add(forwardBtn, c);
-        c.gridx = 2;
         c.insets = new Insets(5, 0, 5, 10);
+
         c.anchor = GridBagConstraints.LINE_END;
+        c.gridx = 2;
         c.weightx = 1;
         headerPanel.add(addAccountbtn, c);
         add(headerPanel, BorderLayout.NORTH);
+//        revalidate();
     }
 
 
@@ -340,4 +364,12 @@ public class AtlasWindow extends JFrame {
             e.printStackTrace();
         }
     }
+
+//    public JTextField getSearchBar() {
+//        return searchBar;
+//    }
+//
+//    public JPopupMenu getPopupMenu() {
+//        return popupMenu;
+//    }
 }

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class FileSignatureReader {
     private File file;
@@ -40,7 +41,7 @@ public class FileSignatureReader {
         fileSignatures.put(new byte[]{82, 73, 70, 70}, "WAV");
 
         // Document files
-        fileSignatures.put(new byte[]{37, 80, 68, 70, 45}, "PDF");
+        fileSignatures.put(new byte[]{37, 80, 68, 70, 45}, "PDF Document (.pdf)");
         fileSignatures.put(new byte[]{80, 75, 3, 4}, "ZIP Archive (.zip, .docx, .xlsx, .pptx)");
         fileSignatures.put(new byte[]{80, 75, 7, 8}, "ZIP Archive (empty) (.zip)");
         fileSignatures.put(new byte[]{-48, -49, 17, -32, -95, -79, 26, -31}, "Microsoft Office Document (.doc, .xls, .ppt)");
@@ -79,6 +80,16 @@ public class FileSignatureReader {
         for (Map.Entry<byte[], String> entry : fileSignatures.entrySet()) {
             byte[] signature = entry.getKey();
             if (fileHeader.length >= signature.length && startsWith(fileHeader, signature)) {
+                if (Objects.equals(entry.getValue(), "ZIP Archive (.zip, .docx, .xlsx, .pptx)")){
+                    if (file.getAbsolutePath().toLowerCase().endsWith(".docx"))
+                        return "Word Document (.docx)";
+                    else if (file.getAbsolutePath().toLowerCase().endsWith(".xlsx"))
+                        return "Excel Document (.xlsx)";
+                    else if (file.getAbsolutePath().toLowerCase().endsWith(".pptx"))
+                        return "PowerPoint Document (.pptx)";
+                    else if (file.getAbsolutePath().toLowerCase().endsWith(".zip"))
+                        return "Zip Archive (.zip)";
+                }
                 return entry.getValue();
             }
         }

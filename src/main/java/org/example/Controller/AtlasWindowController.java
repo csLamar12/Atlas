@@ -4,15 +4,12 @@ import org.example.Model.*;
 import org.example.View.AtlasWindow;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
-import java.util.Map;
+
 
 public class AtlasWindowController {
     private AtlasWindow atlasWindow;
@@ -25,7 +22,7 @@ public class AtlasWindowController {
     public AtlasWindowController(AtlasWindow atlasWindow, String currentDirectory) {
         this.atlasWindow = atlasWindow;
         this.currentDirectory = currentDirectory;
-        navigationHistory.visitDirectory(currentDirectory);
+//        navigationHistory.visitDirectory(currentDirectory);
         showWorkingDirectory();
         bindButtonEvents();
         driveDetector = new DriveDetector();
@@ -116,21 +113,7 @@ public class AtlasWindowController {
                     showWorkingDirectory();
                     return;
                 }
-                if (fileNode.isGoogleFileNode()){
-                    currentDirectory = fileNode.getTempPath();
-                    String id = driveConnection.GetFileIdFromMap(currentDirectory);
-                    try {
-                        System.out.println(id + "= " + currentDirectory);
-                        fileNode = driveConnection.convertToFileNode(driveConnection.getFileFromDrive(id));
-                        atlasWindow.expandFolder(fileNode.getChildren());
-                        return;
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                currentDirectory = fileNode.getAbsolutePath();
-                atlasWindow.expandFolder(fileNode.getChildren());
-                showWorkingDirectory();
+                googleFileNodeNavigation(fileNode);
             }
         });
         atlasWindow.getForwardBtn().addActionListener(new ActionListener() {
@@ -139,9 +122,7 @@ public class AtlasWindowController {
                 FileNode fileNode = navigationHistory.goForward(currentDirectory);
                 if(fileNode == null)
                     return;
-                currentDirectory = fileNode.getAbsolutePath();
-                atlasWindow.expandFolder(fileNode.getChildren());
-                showWorkingDirectory();
+                googleFileNodeNavigation(fileNode);
             }
         });
 
@@ -151,6 +132,48 @@ public class AtlasWindowController {
                 addGoogleDrive();
             }
         });
+
+//        atlasWindow.getSearchBar().addFocusListener(new FocusAdapter() {
+//            @Override
+//            public void focusGained(FocusEvent e) {
+//                atlasWindow.getSearchBar().setText("");
+//                atlasWindow.getPopupMenu().setVisible(true);
+//                atlasWindow.getPopupMenu().show(atlasWindow.getSearchBar(), 0, atlasWindow.getSearchBar().getHeight());
+//            }
+//
+//            @Override
+//            public void focusLost(FocusEvent e) {
+//
+////                atlasWindow.getPopupMenu().setVisible(false);
+//                if (atlasWindow.getSearchBar().getText().isEmpty()) {
+//                    atlasWindow.getSearchBar().setText("Search\t\t\t               🔍");
+//                }
+//            }
+//        });
+
+//        atlasWindow.getSearchBar().addKeyListener(new KeyAdapter() {
+//            @Override
+//            public void keyTyped(KeyEvent e) {
+//                String query = atlasWindow.getSearchBar().getText().toLowerCase();
+//
+//            }
+//        });
+    }
+
+    private void googleFileNodeNavigation(FileNode fileNode) {
+        if (fileNode.isGoogleFileNode()){
+            String id = driveConnection.GetFileIdFromMap(fileNode.getTempPath());
+            try {
+                fileNode = driveConnection.convertToFileNode(driveConnection.getFileFromDrive(id));
+                atlasWindow.expandFolder(fileNode.getChildren());
+                currentDirectory = getGoogleDrivePath(fileNode);
+                return;
+            }catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        currentDirectory = fileNode.getAbsolutePath();
+        atlasWindow.expandFolder(fileNode.getChildren());
     }
 
     public void showWorkingDirectory(){
@@ -211,7 +234,7 @@ public class AtlasWindowController {
                 GoogleDriveFileHandler gDFileHandler = new GoogleDriveFileHandler(driveConnection.getService());
                 gDFileHandler.downloadOpenAndDeleteFileInBackground(selectedFileNode.getGoogleDriveFileID(), selectedFileNode.getName());
             }else if (!selectedFileNode.isFile() && selectedFileNode.getGoogleDriveFileID() != null) {
-                navigationHistory.visitDirectory(getGoogleDrivePath(selectedFileNode));
+                navigationHistory.visitDirectory(currentDirectory);
                 currentDirectory = getGoogleDrivePath(selectedFileNode);
                 atlasWindow.expandFolder(selectedFileNode.getChildren());
                 showWorkingDirectory();
@@ -230,4 +253,5 @@ public class AtlasWindowController {
             ex.printStackTrace();
         }
     }
+
 }

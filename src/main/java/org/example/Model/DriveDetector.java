@@ -20,12 +20,9 @@ public class DriveDetector {
             FileNode fileNode = new FileNode(file);
             fileNode.setName(volumeName);
             fileNodes.add(fileNode);
-            if (volumeName != null) {
-                System.out.println("Volume: " + volumeName + " at " + file.getAbsolutePath());
-            } else {
-                System.out.println("Root: " + file.getAbsolutePath());
-            }
         }
+
+
     }
 
     public List<FileNode> getVolumes(){

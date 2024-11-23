@@ -15,7 +15,6 @@ public class FileNode {
     private long size;
     private SimpleDateFormat dateFormat;
     private boolean isFile;
-    private Map<String, Object> metadata = new HashMap<>();
     private List<FileNode> children = new ArrayList<>();
     private File file;
     private final String GoogleDriveFileID;
@@ -83,14 +82,6 @@ public class FileNode {
                 return this.file.getAbsolutePath().equals("/");
         }
         return false;
-    }
-
-    // Todo - Add Summary
-    public void setMetadata(){
-        this.metadata.put("Name", this.name);
-        this.metadata.put("Type", this.type);
-        this.metadata.put("Size", this.convertSize());
-        this.metadata.put("LastModified", this.lastModified);
     }
 
     public String convertSize(){
