@@ -135,6 +135,25 @@ public class GoogleDriveFileHandler {
         }
     }
 
+    // Public method to download a file and return the temporary path
+    public String downloadFileToTempDirectory(String fileId, String fileName) throws IOException {
+        // Create temp directory if it does not exist
+        java.io.File tempDir = new java.io.File("temp");
+        if (!tempDir.exists()) {
+            tempDir.mkdir();  // Create the temp directory
+        }
+
+        // Temporary location to store the file
+        String tempFilePath = "temp/" + fileName;
+
+        // Download the file
+        downloadFile(fileId, tempFilePath);
+
+        // Return the temporary file path
+        return tempFilePath;
+    }
+
+
     // Optional: Shutdown executor service when no longer needed
     public void shutdown() {
         executorService.shutdown();

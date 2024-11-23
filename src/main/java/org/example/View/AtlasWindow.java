@@ -15,7 +15,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,9 @@ public class AtlasWindow extends JFrame {
     private JButton backBtn, forwardBtn;
     private JScrollPane scrollPane;
     private JSplitPane splitPane;
-    private JLabel currentDirectory, addAccountbtn;
+    private JLabel currentDirectory;
+    private JLabel addAccountbtn;
+    private JTextArea summaryTextArea;
 //    private JTextField searchBar;
 //    private JPopupMenu popupMenu;
     private VideoBasedPreview videoVideoBasedPreview;
@@ -127,7 +128,16 @@ public class AtlasWindow extends JFrame {
         // ToDO - Create a summary panel
         summaryPanel = new JPanel();
         summaryPanel.setPreferredSize(new Dimension(220, 280));
-        summaryPanel.setLayout(new BorderLayout());
+        summaryPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+        summaryTextArea = new JTextArea("", 10, 30);
+        summaryTextArea.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        summaryTextArea.setEditable(false);
+        summaryTextArea.setLineWrap(true);
+        summaryTextArea.setWrapStyleWord(true);
+
+        summaryPanel.add(summaryTextArea, BorderLayout.CENTER);
+
         // TODO - Add them to the pSPanel
         pSPanel.add(pPLabel, BorderLayout.NORTH);
         pSPanel.add(previewPanel, BorderLayout.CENTER);
@@ -365,7 +375,11 @@ public class AtlasWindow extends JFrame {
         }
     }
 
-//    public JTextField getSearchBar() {
+    public JTextArea getSummaryTextArea() {
+        return summaryTextArea;
+    }
+
+    //    public JTextField getSearchBar() {
 //        return searchBar;
 //    }
 //

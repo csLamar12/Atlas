@@ -53,6 +53,10 @@ public class AIEngine {
     }
 
     public String getSummary(){
+        System.out.println("File Path: " + filePath);
+        System.out.println("File Type: " + fileType);
+        System.out.println("Command: " + command);
+        System.out.println("Text: " + text);
         String aiSummary="";
         try (VertexAI vertexAi = new VertexAI("atlasbrowser", "us-central1"); ) {
             GenerationConfig generationConfig =
@@ -158,6 +162,8 @@ public class AIEngine {
         ContentHandler handler = new BodyContentHandler();
         Metadata metadata = new Metadata();
         ParseContext context = new ParseContext();
+
+        System.out.println(handler.toString().length());
 
         // Parsing the string
         parser.parse(stream, handler, metadata, context);

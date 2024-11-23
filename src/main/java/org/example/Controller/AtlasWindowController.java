@@ -18,9 +18,11 @@ public class AtlasWindowController {
     private DriveDetector driveDetector;
     private List<FileNode> volumes;
     private GoogleDriveConnection driveConnection;
+    private AIEngine aiEngine;
 
     public AtlasWindowController(AtlasWindow atlasWindow, String currentDirectory) {
         this.atlasWindow = atlasWindow;
+        aiEngine = new AIEngine();
         this.currentDirectory = currentDirectory;
 //        navigationHistory.visitDirectory(currentDirectory);
         showWorkingDirectory();
@@ -188,9 +190,29 @@ public class AtlasWindowController {
         if (atlasWindow.getVideoPreview() != null)
             atlasWindow.getVideoPreview().stopVideo();
         atlasWindow.revalidate();
+
+        if (selectedFileNode.isGoogleFileNode()){
+            GoogleDriveFileHandler gDFH = new GoogleDriveFileHandler(driveConnection.getService());
+            try {
+                String tempPath = gDFH.downloadFileToTempDirectory(selectedFileNode.getGoogleDriveFileID(), selectedFileNode.getName());
+                aiEngine.setFilePath(tempPath);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else
+            aiEngine.setFilePath(selectedFileNode.getAbsolutePath());
         switch(selectedFileNode.getType()){
             case "MP4":
                 // works for some MP4 files
+                aiEngine.setFileType("mp4");
+                aiEngine.setCommand("Explain the content of this video");
+                atlasWindow.getSummaryTextArea().setText("Fetching Summary...");
+                new Thread(()->{
+                    atlasWindow.getSummaryTextArea().setText(aiEngine.getSummary());
+                    atlasWindow.revalidate();
+                    atlasWindow.repaint();
+                }).start();
                 atlasWindow.showPreviewPane();
                 atlasWindow.addVideoPreview(selectedFileNode.getAbsolutePath());
                 break;
@@ -200,6 +222,14 @@ public class AtlasWindowController {
             case "HTML File (.html)":
             case "XML File (.xml)":
             case "Text File":
+                aiEngine.setFileType("text");
+                aiEngine.setCommand("Summarize this document");
+                atlasWindow.getSummaryTextArea().setText("Fetching Summary...");
+                new Thread(()->{
+                    atlasWindow.getSummaryTextArea().setText(aiEngine.getSummary());
+                    atlasWindow.revalidate();
+                    atlasWindow.repaint();
+                }).start();
                 atlasWindow.showPreviewPane();
                 atlasWindow.addTextBasedPreview(selectedFileNode.getFile());
                 break;
@@ -208,10 +238,26 @@ public class AtlasWindowController {
             case "PNG File (.png)":
             case "TIFF File (.tif, .tiff)":
             case "Bitmap File (.bmp)":
+                aiEngine.setFileType("mp4");
+                aiEngine.setCommand("Generate a description for this image");
+                atlasWindow.getSummaryTextArea().setText("Fetching Summary...");
+                new Thread(()->{
+                    atlasWindow.getSummaryTextArea().setText(aiEngine.getSummary());
+                    atlasWindow.revalidate();
+                    atlasWindow.repaint();
+                }).start();
                 atlasWindow.showPreviewPane();
                 atlasWindow.addImageBasedPreview(selectedFileNode.getAbsolutePath());
                 break;
             case "PDF":
+                aiEngine.setFileType("text");
+                aiEngine.setCommand("Summarize this document");
+                atlasWindow.getSummaryTextArea().setText("Fetching Summary...");
+                new Thread(()->{
+                    atlasWindow.getSummaryTextArea().setText(aiEngine.getSummary());
+                    atlasWindow.revalidate();
+                    atlasWindow.repaint();
+                }).start();
                 // DOESN'T WORK YET!
 //                atlasWindow.addPDFBasedPreview(selectedFileNode.getAbsolutePath());
                 break;

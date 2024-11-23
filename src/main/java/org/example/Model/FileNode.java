@@ -1,5 +1,7 @@
 package org.example.Model;
 
+import org.example.Controller.AIEngine;
+
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
