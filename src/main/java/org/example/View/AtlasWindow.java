@@ -12,6 +12,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -144,15 +146,15 @@ public class AtlasWindow extends JFrame {
         fileTable.setShowGrid(false);
         //ToDo remove header background and add line
 
-//        // Create a custom renderer for left alignment
-//        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-//        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
-//
-//        // Apply the renderer to all columns
-//        for (int i = 0; i < fileTable.getColumnCount(); i++) {
-//            TableColumn column = fileTable.getColumnModel().getColumn(i);
-//            column.setCellRenderer(leftRenderer);
-//        }
+        // Create a custom renderer for left alignment
+        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
+        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+
+        // Apply the renderer to all columns
+        for (int i = 1; i < fileTable.getColumnCount(); i++) {
+            TableColumn column = fileTable.getColumnModel().getColumn(i);
+            column.setCellRenderer(leftRenderer);
+        }
 
         // Adjust icon column
         TableColumn iconColumn = fileTable.getColumnModel().getColumn(0);
@@ -310,5 +312,32 @@ public class AtlasWindow extends JFrame {
 
     public void showMessage(String message) {
         JOptionPane.showMessageDialog(this, message);
+    }
+
+    public void showNotification(String message) {
+        if (!SystemTray.isSupported()) {
+            showMessage(message);
+            return;
+        }
+        SystemTray tray = SystemTray.getSystemTray();
+        TrayIcon trayIcon = new TrayIcon(Toolkit.getDefaultToolkit().getImage("/resources/folder.png"), "Atlas");
+
+        PopupMenu popupMenu = new PopupMenu();
+        MenuItem menuItem = new MenuItem("Exit");
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        popupMenu.add(menuItem);
+        trayIcon.setPopupMenu(popupMenu);
+        trayIcon.setImageAutoSize(true);
+        try{
+            tray.add(trayIcon);
+
+            trayIcon.displayMessage("Atlas", message, TrayIcon.MessageType.INFO);
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
     }
 }

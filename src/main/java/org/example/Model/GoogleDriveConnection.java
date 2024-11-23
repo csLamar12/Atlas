@@ -29,6 +29,8 @@ public class GoogleDriveConnection {
     private static final List<String> SCOPES = Collections.singletonList(
             DriveScopes.DRIVE
     );
+    private Map<String, String> fileIdToPathMap = new HashMap<>();
+    private Map<String, FileNode> fileNodeCache = new HashMap<>();
     private static final String CREDENTIALS_FILE_PATH = "src/main/java/org/example/Resources/credentials.json";
 
     private Drive service;
@@ -53,8 +55,8 @@ public class GoogleDriveConnection {
 
     // Retrieves the root directory as a GoogleFileNode
     public GoogleFileNode getRootDirectory() throws IOException {
-        File rootMetadata = service.files().get("root").setFields("id, name, mimeType").execute();
-        return new GoogleFileNode(rootMetadata);
+        File rootMetadata = service.files().get("root").setFields("id, name, mimeType, size, modifiedTime").execute();
+        return new GoogleFileNode(rootMetadata, this);
     }
 
     // Lists children of a directory as GoogleFileNode objects
@@ -67,7 +69,7 @@ public class GoogleDriveConnection {
 
         List<GoogleFileNode> children = new ArrayList<>();
         for (File file : result.getFiles()) {
-            children.add(new GoogleFileNode(file));
+            children.add(new GoogleFileNode(file, this));
         }
         return children;
     }
@@ -104,6 +106,12 @@ public class GoogleDriveConnection {
         }
     }
 
+    public boolean tokensDirectoryExists() {
+        java.io.File tokenDir = new java.io.File(TOKENS_DIRECTORY_PATH);
+        return tokenDir.exists() && tokenDir.isDirectory();
+    }
+
+
     // Helper method to delete directories recursively
     private void deleteDirectoryRecursively(java.io.File dir) {
         if (dir != null && dir.isDirectory()) {
@@ -121,6 +129,10 @@ public class GoogleDriveConnection {
     // Method to convert GoogleFileNode to FileNode
     public FileNode convertToFileNode(GoogleFileNode googleFileNode) {
 
+        if (fileNodeCache.containsKey(googleFileNode.getId())) {
+            return fileNodeCache.get(googleFileNode.getId());
+        }
+
         FileNode fileNode = new FileNode(googleFileNode);
 
         // If the GoogleFileNode is a folder, we can fetch its children
@@ -136,50 +148,38 @@ public class GoogleDriveConnection {
                 e.printStackTrace();
             }
         }
-
+        fileNodeCache.put(googleFileNode.getId(), fileNode);
         return fileNode;
     }
 
     // Method to fetch a file/folder from Google Drive by its ID
     public GoogleFileNode getFileFromDrive(String fileId) throws IOException {
-        File fileMetadata = service.files().get(fileId).setFields("id, name, mimeType").execute();
-        return new GoogleFileNode(fileMetadata);  // Assuming GoogleFileNode can be constructed from File metadata
+        File fileMetadata = service.files().get(fileId).setFields("id, name, mimeType, size, modifiedTime").execute();
+        return new GoogleFileNode(fileMetadata, this);
     }
 
-
+    public Map<String, String> getFileIdToPathMap() {
+        return fileIdToPathMap;
+    }
 
     public String getLoggedInUserName() throws IOException {
         About about = service.about().get().setFields("user").execute();
         return about.getUser().getDisplayName();
     }
 
-    public static void main(String[] args) {
-        try {
-            GoogleDriveConnection driveConnection = new GoogleDriveConnection();
-            driveConnection.clearTokens();
+    public void AddFileToMap(String fileId, String filePath){
+        fileIdToPathMap.put(fileId, filePath);
+    }
 
-            try {
-                // Authenticate and initialize
-                driveConnection.login();
-                if (driveConnection.isLoggedIn()) {
-                    System.out.println("Logged in successfully");
-                } else
-                    System.out.println("Login Failed");
-            } catch (Exception e) {
-                e.printStackTrace();
+    public String GetFileNameFromMap(String fileId){
+        return fileIdToPathMap.get(fileId);
+    }
+    public String GetFileIdFromMap(String filePath){
+        for (Map.Entry<String, String> entry : fileIdToPathMap.entrySet()) {
+            if (entry.getValue().equals(filePath)) {
+                return entry.getKey();
             }
-
-            // Get the root directory
-            GoogleFileNode root = driveConnection.getRootDirectory();
-            System.out.println("Root Directory: " + root.getName());
-
-            // List children of the root directory
-            List<GoogleFileNode> children = driveConnection.listChildren(root.getId());
-            for (GoogleFileNode child : children) {
-                System.out.printf("%s (%s)%n", child.getName(), child.getType());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return null;
     }
 }

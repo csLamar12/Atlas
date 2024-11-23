@@ -21,7 +21,12 @@ public class FileNode {
     private final String GoogleDriveFileID;
     private com.google.api.services.drive.model.File gdFile;
     private GoogleFileNode googleFileNode = null;
+    private String tempPath;
 
+    public FileNode(){
+        this.GoogleDriveFileID = null;
+        this.gdFile = null;
+    }
 
     public FileNode(File file) {
         this.file = file;
@@ -60,6 +65,10 @@ public class FileNode {
 
     public GoogleFileNode getGoogleFileNode() {
         return googleFileNode;
+    }
+
+    public void setGoogleFileNode(GoogleFileNode googleFileNode) {
+        this.googleFileNode = googleFileNode;
     }
 
     public boolean isGoogleFileNode(){
@@ -197,6 +206,14 @@ public class FileNode {
 
     public ImageIcon getImg() {
         return img;
+    }
+
+    public String getTempPath() {
+        return tempPath;
+    }
+
+    public void setTempPath(String tempPath) {
+        this.tempPath = tempPath;
     }
 
     @Override

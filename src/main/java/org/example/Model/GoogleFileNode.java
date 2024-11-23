@@ -6,6 +6,7 @@ import com.google.api.services.drive.model.File;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -18,15 +19,40 @@ public class GoogleFileNode {
     private Map<String, Object> metadata = new HashMap<>();
     private List<FileNode> children = new ArrayList<>();
     private File file;
+    private GoogleDriveConnection driveConnection;
+    private Drive drive;
 
+    public GoogleFileNode(){
 
-    public GoogleFileNode(File file) {
+    }
+
+    public GoogleFileNode(File file, GoogleDriveConnection driveConnection) {
+        this.driveConnection = driveConnection;
+        this.drive = driveConnection.getService();
         this.file = file;
         this.name = file.getName();
         this.isFile = !"application/vnd.google-apps.folder".equals(file.getMimeType());
         this.size = file.getSize() == null ? 0 : file.getSize();
         this.type = getType();
         this.lastModified = getLastModified();
+        // Check if parents field is present
+        if (this.file.getParents() == null || this.file.getParents().isEmpty()) {
+            // If not, retrieve the file again with the parents field
+            try {
+                this.file = drive.files().get(file.getId())
+                        .setFields("id, name, mimeType, parents, size, modifiedTime")
+                        .execute();
+            } catch (IOException e) {
+                System.err.println("Error retrieving file parents: " + e.getMessage());
+            }
+        }
+        try {
+            
+            this.driveConnection.AddFileToMap(this.file.getId(), this.getReadablePath(drive));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     // TODO - Add Summary
@@ -75,14 +101,6 @@ public class GoogleFileNode {
         }
     }
 
-    public List<FileNode> getChildren() {
-        return children;
-    }
-
-    public String getAbsolutePath() {
-        return file.getId(); // Google Drive files use ID instead of absolute paths
-    }
-
     public boolean isFile() {
         return isFile;
     }
@@ -95,48 +113,17 @@ public class GoogleFileNode {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setLastModified(String lastModified) {
-        this.lastModified = lastModified;
-    }
-
     public long getSize() {
         return size;
-    }
-
-    public void setSize(long size) {
-        this.size = size;
     }
 
     public SimpleDateFormat getDateFormat() {
         return dateFormat;
     }
 
-    public void setDateFormat(SimpleDateFormat dateFormat) {
-        this.dateFormat = dateFormat;
-    }
 
     public void setFile(boolean file) {
         isFile = file;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
-    }
-
-    public void setChildren(List<FileNode> children) {
-        this.children = children;
     }
 
     public File getFile() {
@@ -145,14 +132,6 @@ public class GoogleFileNode {
 
     public void setFile(File file) {
         this.file = file;
-    }
-
-    public ImageIcon getImg() {
-        return img;
-    }
-
-    public void setImg(ImageIcon img) {
-        this.img = img;
     }
 
     @Override
@@ -248,7 +227,6 @@ public class GoogleFileNode {
             currentNode = getParentNode(driveService, currentNode);
         }
 
-        System.out.println(String.join("/", pathSegments));
         // Join the segments with a file separator (e.g., "/")
         return String.join("/", pathSegments);
     }
@@ -257,17 +235,35 @@ public class GoogleFileNode {
         String parentId = getParentId(node.getFile());
         if (parentId == null) return null; // Reached root
 
-        // Fetch the parent File object from Drive
         File parentFile = driveService.files().get(parentId)
                 .setFields("id, name, mimeType, parents, size, modifiedTime")
                 .execute();
 
-        return new GoogleFileNode(parentFile);
+        return new GoogleFileNode(parentFile, driveConnection);
     }
 
     private String getParentId(File file) {
-        // Get the parent ID from the File object
-        return (file.getParents() != null && !file.getParents().isEmpty()) ? file.getParents().get(0) : null;
+        if (file.getParents() == null || file.getParents().isEmpty()) {
+            return null; // No parents (possibly a root file)
+        }
+        // Assuming a file can have multiple parents (like shared drives, etc.), return the first parent
+        String parentId = file.getParents().get(0);
+        return parentId;
     }
 
+    public GoogleDriveConnection getDriveConnection() {
+        return driveConnection;
+    }
+
+    public void setDriveConnection(GoogleDriveConnection driveConnection) {
+        this.driveConnection = driveConnection;
+    }
+
+    public Drive getDrive() {
+        return drive;
+    }
+
+    public void setDrive(Drive drive) {
+        this.drive = drive;
+    }
 }

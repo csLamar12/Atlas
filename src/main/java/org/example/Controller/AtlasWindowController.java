@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Map;
 
 public class AtlasWindowController {
     private AtlasWindow atlasWindow;
@@ -29,12 +30,23 @@ public class AtlasWindowController {
         bindButtonEvents();
         driveDetector = new DriveDetector();
         volumes = driveDetector.getVolumes();
-        showExistingGoogleDrive();
+        new Thread(()-> {
+            showExistingGoogleDrive();
+        }).start();
         atlasWindow.expandFolder(volumes);
     }
 
     public void addGoogleDrive(){
         try{
+            if (driveConnection != null) {
+                for (FileNode fileNode : volumes) {
+                    if (fileNode.isGoogleFileNode()){
+                        volumes.remove(fileNode);
+                        System.out.println("volume removed");
+                        break;
+                    }
+                }
+            }
             driveConnection = new GoogleDriveConnection();
             driveConnection.clearTokens();
             driveConnection.login();
@@ -47,7 +59,8 @@ public class AtlasWindowController {
             GoogleFileNode root = driveConnection.getRootDirectory();
             FileNode googleDriveNode = driveConnection.convertToFileNode(root);
             volumes.add(googleDriveNode);
-            atlasWindow.expandFolder(volumes);
+            if (currentDirectory.equals("Volumes"))
+                atlasWindow.expandFolder(volumes);
         } catch (GeneralSecurityException | IOException ex) {
             ex.printStackTrace();
         }
@@ -56,18 +69,22 @@ public class AtlasWindowController {
     public void showExistingGoogleDrive(){
         try{
             driveConnection = new GoogleDriveConnection();
-//            driveConnection.clearTokens();
+            if (!driveConnection.tokensDirectoryExists()){
+                return;
+            }
             driveConnection.login();
             if (driveConnection.isLoggedIn())
-                atlasWindow.showMessage("Welcome " + driveConnection.getLoggedInUserName() + "!");
+                atlasWindow.showMessage("Welcome back " + driveConnection.getLoggedInUserName() + "!");
             else {
                 atlasWindow.showMessage("Login failed!");
                 return;
             }
+            atlasWindow.showNotification("Google drive is being added in the background.");
             GoogleFileNode root = driveConnection.getRootDirectory();
             FileNode googleDriveNode = driveConnection.convertToFileNode(root);
             volumes.add(googleDriveNode);
-            atlasWindow.expandFolder(volumes);
+            if (currentDirectory.equals("Volumes"))
+                atlasWindow.expandFolder(volumes);
         } catch (GeneralSecurityException | IOException ex) {
             ex.printStackTrace();
         }
@@ -99,6 +116,18 @@ public class AtlasWindowController {
                     showWorkingDirectory();
                     return;
                 }
+                if (fileNode.isGoogleFileNode()){
+                    currentDirectory = fileNode.getTempPath();
+                    String id = driveConnection.GetFileIdFromMap(currentDirectory);
+                    try {
+                        System.out.println(id + "= " + currentDirectory);
+                        fileNode = driveConnection.convertToFileNode(driveConnection.getFileFromDrive(id));
+                        atlasWindow.expandFolder(fileNode.getChildren());
+                        return;
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
                 currentDirectory = fileNode.getAbsolutePath();
                 atlasWindow.expandFolder(fileNode.getChildren());
                 showWorkingDirectory();
@@ -129,7 +158,8 @@ public class AtlasWindowController {
     }
 
     public void onSelect(FileNode selectedFileNode){
-        atlasWindow.showPreviewPane();
+        if (!selectedFileNode.isFile())
+            return;
         if (atlasWindow.getVideoPreview() != null && atlasWindow.getVideoPreview().isVideoPlaying())
             atlasWindow.getVideoPreview().stopVideo();
         if (atlasWindow.getVideoPreview() != null)
@@ -138,6 +168,7 @@ public class AtlasWindowController {
         switch(selectedFileNode.getType()){
             case "MP4":
                 // works for some MP4 files
+                atlasWindow.showPreviewPane();
                 atlasWindow.addVideoPreview(selectedFileNode.getAbsolutePath());
                 break;
             case "C/C++ Source File (.c, .cpp)":
@@ -146,6 +177,7 @@ public class AtlasWindowController {
             case "HTML File (.html)":
             case "XML File (.xml)":
             case "Text File":
+                atlasWindow.showPreviewPane();
                 atlasWindow.addTextBasedPreview(selectedFileNode.getFile());
                 break;
             case "JPEG File (.jpg, .jpeg)":
@@ -153,6 +185,7 @@ public class AtlasWindowController {
             case "PNG File (.png)":
             case "TIFF File (.tif, .tiff)":
             case "Bitmap File (.bmp)":
+                atlasWindow.showPreviewPane();
                 atlasWindow.addImageBasedPreview(selectedFileNode.getAbsolutePath());
                 break;
             case "PDF":
@@ -175,7 +208,6 @@ public class AtlasWindowController {
     public void onRowDoubleClicked(FileNode selectedFileNode) {
         try {
             if (selectedFileNode.isFile() && selectedFileNode.getGoogleDriveFileID() != null) {
-                driveConnection.getFileFromDrive(selectedFileNode.getGoogleDriveFileID());
                 GoogleDriveFileHandler gDFileHandler = new GoogleDriveFileHandler(driveConnection.getService());
                 gDFileHandler.downloadOpenAndDeleteFileInBackground(selectedFileNode.getGoogleDriveFileID(), selectedFileNode.getName());
             }else if (!selectedFileNode.isFile() && selectedFileNode.getGoogleDriveFileID() != null) {
